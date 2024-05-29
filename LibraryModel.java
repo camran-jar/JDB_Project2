@@ -13,7 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.GregorianCalendar;
-
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -414,49 +413,84 @@ public class LibraryModel {
 
         public String returnBook(int isbn, int customerid) {
             try{
-                // check if customer has borrowed the book 
-                String checkSQL = "SELECT * FROM cust_book WHERE ISBN = ? AND CustomerID = ?";
-                PreparedStatement checkPS = con.prepareStatement(checkSQL);
-                checkPS.setInt(1, isbn);
-                checkPS.setInt(2, customerid);
-                ResultSet checkRS = checkPS.executeQuery();
+               // begin transaction
+                con.setAutoCommit(false);
 
-                if (!checkRS.next()) {
-                    return "Customer with ID " + customerid + " has not borrowed book with ISBN " + isbn;
+                // check if customer exists, lock them 
+                String custCheckSQL = "SELECT * FROM customer WHERE customerID = ? FOR UPDATE";
+                PreparedStatement custCheckPS = con.prepareStatement(custCheckSQL);
+                custCheckPS.setInt(1, customerid);
+                ResultSet custCheckRS = custCheckPS.executeQuery();
+
+                if (!custCheckRS.next()) {
+                    con.rollback();
+                    return "Customer not found";
                 }
 
-                // remove book from customer record 
+                // check if book exists, lock it
+                String bookCheckSQL = "SELECT * FROM book WHERE ISBN = ? FOR UPDATE";
+                PreparedStatement bookCheckPS = con.prepareStatement(bookCheckSQL);
+                bookCheckPS.setInt(1, isbn);
+                ResultSet bookCheckRS = bookCheckPS.executeQuery();
+
+                if (!bookCheckRS.next()) {
+                    con.rollback();
+                    return "Book not found";
+                }
+
+                // check if book is borrowed by the customer
+                String borrowCheckSQL = "SELECT * FROM cust_book WHERE ISBN = ? AND CustomerID = ?";
+                PreparedStatement borrowCheckPS = con.prepareStatement(borrowCheckSQL);
+                borrowCheckPS.setInt(1, isbn);
+                borrowCheckPS.setInt(2, customerid);
+                ResultSet borrowCheckRS = borrowCheckPS.executeQuery();
+
+                if (!borrowCheckRS.next()) {
+                    con.rollback();
+                    return "Book with ISBN " + isbn + " not borrowed by customer ID: " + customerid;
+                }
+                
+                // promt user to confirm return
+                int resp = JOptionPane.showConfirmDialog(dialogParent, "Confirm Return book?\n ISBN:" + isbn + " by customer ID: " + customerid, "Confirm Return", JOptionPane.YES_NO_OPTION);
+                if (resp != JOptionPane.YES_OPTION) {
+                    con.rollback();
+                    return "Transaction cancelled";
+                }
+
+                // delete the book from the customer record
                 String returnSQL = "DELETE FROM cust_book WHERE ISBN = ? AND CustomerID = ?";
                 PreparedStatement returnPS = con.prepareStatement(returnSQL);
                 returnPS.setInt(1, isbn);
                 returnPS.setInt(2, customerid);
                 returnPS.executeUpdate();
 
-                // update the NumLeft of the book
+                // update the book record
                 String updateSQL = "UPDATE book SET NumLeft = NumLeft + 1 WHERE ISBN = ?";
                 PreparedStatement updatePS = con.prepareStatement(updateSQL);
                 updatePS.setInt(1, isbn);
                 updatePS.executeUpdate();
 
+                // commit the transaction
+                con.commit();
+
                 return "Book with ISBN " + isbn + " returned by customer with ID " + customerid;
+
             } catch (SQLException sqlex) {
-                // Handle SQL exception
+                try {
+                    con.rollback();
+                } catch (SQLException rollBackEx) {
+                    System.out.println("Error rolling back transaction: " + rollBackEx.getMessage());
+                }
                 System.out.println("SQL Error: " + sqlex.getMessage());
                 return "Error returning book";
-            }
-        }
-
-        public void closeDBConnection() {
-            try {
-                if (con != null) {
-                    con.close();
-                    System.out.println("Database connection closed");
+            } finally {
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException autoCommitEx) {
+                    System.out.println("Error setting auto-commit to true: " + autoCommitEx.getMessage());
                 }
-            } catch (SQLException sqlex) {
-                System.out.println("Error closing database connection: " + sqlex.getMessage());
             }
         }
-
 
         public String deleteCus(int customerID) {
             return "Delete Customer";
@@ -470,4 +504,16 @@ public class LibraryModel {
         public String deleteBook(int isbn) {
             return "Delete Book";
         }
+
+        public void closeDBConnection() {
+            try {
+                if (con != null) {
+                    con.close();
+                    System.out.println("Database connection closed");
+                }
+            } catch (SQLException sqlex) {
+                System.out.println("Error closing database connection: " + sqlex.getMessage());
+            }
+        }
     }
+
