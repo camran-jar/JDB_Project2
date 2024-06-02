@@ -378,8 +378,8 @@ public class LibraryModel {
                 borrowPS.executeUpdate();
         
                 // Interaction command to simulate contention
-                int resp = JOptionPane.showConfirmDialog(dialogParent, "Confirm Borrow book?\n ISBN:" + isbn + " by customer ID: " + customerID, "Confirm Borrow", JOptionPane.YES_NO_OPTION);
-                if (resp != JOptionPane.YES_OPTION) {
+                int response = JOptionPane.showConfirmDialog(dialogParent, "Confirm Borrow book?\n ISBN:" + isbn + " by customer ID: " + customerID, "Confirm Borrow", JOptionPane.YES_NO_OPTION);
+                if (response != JOptionPane.YES_OPTION) {
                     con.rollback();
                     return "Transaction cancelled";
                 }
@@ -451,8 +451,8 @@ public class LibraryModel {
                 }
                 
                 // promt user to confirm return
-                int resp = JOptionPane.showConfirmDialog(dialogParent, "Confirm Return book?\n ISBN:" + isbn + " by customer ID: " + customerid, "Confirm Return", JOptionPane.YES_NO_OPTION);
-                if (resp != JOptionPane.YES_OPTION) {
+                int response = JOptionPane.showConfirmDialog(dialogParent, "Confirm Return book?\n ISBN:" + isbn + " by customer ID: " + customerid, "Confirm Return", JOptionPane.YES_NO_OPTION);
+                if (response != JOptionPane.YES_OPTION) {
                     con.rollback();
                     return "Transaction cancelled";
                 }
@@ -519,8 +519,8 @@ public class LibraryModel {
             }
 
             // Prompt user to confirm deletion
-            int resp = JOptionPane.showConfirmDialog(dialogParent, "Confirm Delete Customer?\n Customer ID: " + customerID, "Confirm Delete", JOptionPane.YES_NO_OPTION);
-            if (resp != JOptionPane.YES_OPTION) {
+            int response = JOptionPane.showConfirmDialog(dialogParent, "Confirm Delete Customer?\n Customer ID: " + customerID, "Confirm Delete", JOptionPane.YES_NO_OPTION);
+            if (response != JOptionPane.YES_OPTION) {
                 con.rollback();
                 return "Transaction cancelled";
             }
@@ -578,9 +578,9 @@ public class LibraryModel {
                 }
 
                 // prompt user to confirm deltion
-                int resp = JOptionPane.showConfirmDialog(dialogParent, "Confirm delete Author? \n Author ID: " + 
+                int response = JOptionPane.showConfirmDialog(dialogParent, "Confirm delete Author? \n Author ID: " + 
                 authorID, "Confirm Delete", JOptionPane.YES_NO_OPTION);
-                if(resp != JOptionPane.YES_OPTION){
+                if(response != JOptionPane.YES_OPTION){
                     con.rollback();
                     return "Transaction cancelled";
                 }
@@ -638,8 +638,8 @@ public class LibraryModel {
                 }
 
                 //Prompt user to confirm deletion
-                int resp = JOptionPane.showConfirmDialog(dialogParent, "Confirm Delete Book?\n Book ISBN: " + isbn, "Confirm Delete", JOptionPane.YES_NO_OPTION);
-                if (resp != JOptionPane.YES_OPTION) {
+                int response = JOptionPane.showConfirmDialog(dialogParent, "Confirm Delete Book?\n Book ISBN: " + isbn, "Confirm Delete", JOptionPane.YES_NO_OPTION);
+                if (response != JOptionPane.YES_OPTION) {
                     con.rollback();
                     return "Transaction cancelled";
                 }
